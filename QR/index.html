@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Barcode Scanner</title>
+</head>
+<body>
+    <video id="barcode-scanner" width="300" height="200"></video>
+    <div id="result"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/quagga"></script>
+    <script>
+        Quagga.init({
+            inputStream: {
+                name: "Live",
+                type: "LiveStream",
+                target: document.querySelector('#barcode-scanner'),
+            },
+            decoder: {
+                readers: ["ean_reader"]
+            }
+        }, function(err) {
+            if (err) {
+                console.error(err);
+                return;
+            }
+            Quagga.start();
+        });
+
+        Quagga.onDetected(function(result) {
+            var code = result.codeResult.code;
+            document.getElementById("result").innerHTML = "Barcode: " + code;
+
+            // استخدام AJAX لإرسال الباركود الممسوح إلى السكربت PHP
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "check_barcode.php", true);
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    alert(xhr.responseText);
+                }
+            };
+            xhr.send("barcode=" + code);
+            Quagga.stop();
+        });
+    </script>
+</body>
+</html>
